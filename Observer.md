@@ -85,10 +85,6 @@ public:
     void setMeasurements(float temperature, float humidity, float pressure) {
         WeatherInfo data{temperature, humidity, pressure};
         weatherInfo = data;
-        measurementsChanged();
-    }
-
-    void measurementsChanged() {
         notify(*this);
     }
 
