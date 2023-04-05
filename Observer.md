@@ -168,6 +168,12 @@ int main() {
     weatherData->setMeasurements(65,20,40);
 }
 ```
+#### Output
+```
+Current conditions: 60F degrees and 40% humidity
+Avg/Max/Min temperature: 60/60/60
+Avg/Max/Min temperature: 62.5/65/60
+```
 
 ## Conclusion
 The Observer Design Pattern is a powerful tool for decoupling objects and providing a way for objects to be notified of state changes. By using the Observer pattern, we can establish a one-to-many relationship between objects, making it easier to maintain the code and adding new functionality in the future.
