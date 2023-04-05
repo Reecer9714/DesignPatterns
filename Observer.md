@@ -10,12 +10,30 @@ Suppose we have a weather station that measures the temperature, humidity, and p
 UML Diagram
 Here's the UML diagram for the Observer Design Pattern:
 
-Observer Design Pattern UML Diagram
+```mermaid
+classDiagram
+    class Subject {
+        +attach(Observer)
+        +detach(Observer)
+        +notify()
+        -observers: Observer[]
+    }
 
-+ Subject: the object being observed, which maintains a list of its observers and notifies them of any state changes.
-+ Observer: the interface or abstract class that defines the method(s) that are called when the subject's state changes.
-+ ConcreteSubject: a subclass of Subject that implements the notifyObservers() method, which calls the update() method of each observer when the subject's state changes.
-+ ConcreteObserver: a subclass of Observer that implements the update() method, which is called by the subject when its state changes.
+    class Observer {
+        <<Interface>>
+        +update()*
+    }
+
+    Subject "1" --> "*" Observer
+    Subject <|-- ConcreteSubject
+    Observer <|-- ConcreteObserver1
+    Observer <|-- ConcreteObserver2
+```
+
++ **Subject**: the object being observed, which maintains a list of its observers and notifies them of any state changes.
++ **Observer**: the interface or abstract class that defines the method(s) that are called when the subject's state changes.
++ **ConcreteSubject**: a subclass of Subject that calls the notify() method when the subject's state changes.
++ **ConcreteObserver**: a subclass of Observer that implements the update() method, which is called by the subject when its state changes.
 ## Implementation
 
 To implement the Observer Design Pattern, we start by defining the observer interface. The observer interface defines a method for receiving updates:
@@ -34,15 +52,15 @@ Next, we define the subject abstract class, which maintains a list of observers 
 template <typename T>
 class ObservableSubject {
 public:
-    virtual void addObserver(std::shared_ptr<Observer<T>> observer) {
+    virtual void attach(std::shared_ptr<Observer<T>> observer) {
         observers.push_back(observer);
     }
 
-    virtual void removeObserver(std::shared_ptr<Observer<T>> observer) {
+    virtual void detach(std::shared_ptr<Observer<T>> observer) {
         observers.erase(std::remove(observers.begin(), observers.end(), observer), observers.end());
     }
 
-    virtual void notifyObservers(const T& data) {
+    virtual void notify(const T& data) {
         for (const auto& observer : observers) {
             observer->update(data);
         }
@@ -71,7 +89,7 @@ public:
     }
 
     void measurementsChanged() {
-        notifyObservers(weatherInfo);
+        notify(weatherInfo);
     }
 
 private:
@@ -86,7 +104,7 @@ class CurrentConditionsDisplay : public Observer<WeatherData::WeatherInfo>, publ
 public:
     CurrentConditionsDisplay(std::shared_ptr<ObservableSubject<WeatherData::WeatherInfo>> weatherData)
         : weatherData(weatherData) {
-        weatherData->addObserver(shared_from_this());
+        weatherData->attach(shared_from_this());
     }
 
     void update(const WeatherData::WeatherInfo& data) override {
@@ -109,32 +127,32 @@ private:
 class StatisticsDisplay : public Observer<WeatherData::WeatherInfo>, public std::enable_shared_from_this<StatisticsDisplay> {
 public:
     StatisticsDisplay(std::shared_ptr<ObservableSubject<WeatherData::WeatherInfo>> weatherData)
-        : weather_station_(weather_station) {
-        weather_station_.addObserver(shared_from_this());
+        : weatherData(weatherData) {
+        weatherData->attach(shared_from_this());
     }
 
     void update() override {
-        float temperature = weather_station_.getTemperature();
-        if (temperature > max_temperature_) {
-            max_temperature_ = temperature;
+        float temperature = weatherData->getTemperature();
+        if (temperature > maxTemperature) {
+            maxTemperature = temperature;
         }
-        if (temperature < min_temperature_) {
-            min_temperature_ = temperature;
+        if (temperature < minTemperature) {
+            minTemperature = temperature;
         }
-        temperature_sum_ += temperature;
-        num_readings_++;
+        temperatureSum += temperature;
+        numReadings++;
         display();
     }
 
     void display() const {
-        std::cout << "Avg/Max/Min temperature: " << (temperature_sum_ / num_readings_) << "/" << max_temperature_ << "/" << min_temperature << "\n";
+        std::cout << "Avg/Max/Min temperature: " << (temperatureSum / numReadings) << "/" << maxTemperature << "/" << minTemperature << "\n";
     }
 private:
     std::shared_ptr<ObservableSubject<WeatherData::WeatherInfo>> weatherData;
-    float min_temperature_;
-    float max_temperature_;
-    float temperature_sum_;
-    int num_readings_;
+    float minTemperature;
+    float maxTemperature;
+    float temperatureSum;
+    int numReadings;
 };
 ```
 
@@ -150,7 +168,7 @@ int main() {
     weatherData->measurementsChanged();
 
     // remove the observer
-    weatherData->removeObserver(currentDisplay);
+    weatherData->detach(currentDisplay);
 
     // change the weather data again
     weatherData->measurementsChanged();
