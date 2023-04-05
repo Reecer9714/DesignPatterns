@@ -74,7 +74,7 @@ private:
 We can then define a concrete subject class that implements the subject interface and maintains the state of the subject:
 
 ```c++
-class WeatherData : public ObservableSubject<WeatherInfo> {
+class WeatherStation : public ObservableSubject<WeatherStation> {
 public:
     struct WeatherInfo {
         float temperature;
@@ -89,8 +89,12 @@ public:
     }
 
     void measurementsChanged() {
-        notify(weatherInfo);
+        notify(*this);
     }
+
+    float getTemperature() const { return weatherInfo.temperature; }
+    float getHumidity() const { return weatherInfo.humidity; }
+    float getPressure() const { return weatherInfo.pressure; }
 
 private:
     WeatherInfo weatherInfo;
@@ -100,16 +104,13 @@ private:
 Finally, we define one or more concrete observer classes that implement the observer interface and maintain state related to the subject:
 
 ```c++
-class CurrentConditionsDisplay : public Observer<WeatherData::WeatherInfo>, public std::enable_shared_from_this<CurrentConditionsDisplay> {
+class CurrentConditionsDisplay : public Observer<WeatherStation> {
 public:
-    CurrentConditionsDisplay(std::shared_ptr<ObservableSubject<WeatherData::WeatherInfo>> weatherData)
-        : weatherData(weatherData) {
-        weatherData->attach(shared_from_this());
-    }
+    CurrentConditionsDisplay() = default;
 
-    void update(const WeatherData::WeatherInfo& data) override {
-        temperature = data.temperature;
-        humidity = data.humidity;
+    void update(const WeatherStation& data) override {
+        temperature = data.getTemperature();
+        humidity = data.getHumidity();
         display();
     }
 
@@ -118,21 +119,17 @@ public:
     }
 
 private:
-    std::shared_ptr<ObservableSubject<WeatherData::WeatherInfo>> weatherData;
     float temperature;
     float humidity;
 };
 ```
 ```c++
-class StatisticsDisplay : public Observer<WeatherData::WeatherInfo>, public std::enable_shared_from_this<StatisticsDisplay> {
+class StatisticsDisplay : public Observer<WeatherStation>, public std::enable_shared_from_this<StatisticsDisplay> {
 public:
-    StatisticsDisplay(std::shared_ptr<ObservableSubject<WeatherData::WeatherInfo>> weatherData)
-        : weatherData(weatherData) {
-        weatherData->attach(shared_from_this());
-    }
+    StatisticsDisplay() = default;
 
-    void update() override {
-        float temperature = weatherData->getTemperature();
+    void update(const WeatherStation& data) override {
+        float temperature = data.getTemperature();
         if (temperature > maxTemperature) {
             maxTemperature = temperature;
         }
@@ -148,8 +145,7 @@ public:
         std::cout << "Avg/Max/Min temperature: " << (temperatureSum / numReadings) << "/" << maxTemperature << "/" << minTemperature << "\n";
     }
 private:
-    std::shared_ptr<ObservableSubject<WeatherData::WeatherInfo>> weatherData;
-    float minTemperature;
+    float minTemperature = std::numeric_limits<float>::infinity();
     float maxTemperature;
     float temperatureSum;
     int numReadings;
@@ -161,17 +157,19 @@ In this example scenario, we use the Observer Design Pattern to implement the we
 ```c++
 int main() {
     auto weatherData = std::make_shared<WeatherStation>();
-    auto currentDisplay = std::make_shared<CurrentConditionsDisplay>(weatherData);
-    auto statisticsDisplay = std::make_shared<StatisticsDisplay>(weatherData);
+    auto currentDisplay = std::make_shared<CurrentConditionsDisplay>();
+    auto statisticsDisplay = std::make_shared<StatisticsDisplay>();
+    weatherData->attach(currentDisplay);
+    weatherData->attach(statisticsDisplay);
 
     // change the weather data
-    weatherData->measurementsChanged();
+    weatherData->setMeasurements(60,40,20);
 
     // remove the observer
     weatherData->detach(currentDisplay);
 
     // change the weather data again
-    weatherData->measurementsChanged();
+    weatherData->setMeasurements(65,20,40);
 }
 ```
 
