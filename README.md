@@ -5,7 +5,7 @@ Welcome to the "C++ Design Patterns" knowledge base! This is a self-paced collec
 
 ## Course Overview
 This knowledge base is organized into several topics, each of which covers a different design pattern or system architecture concept. Some of the topics covered in this knowledge base include:
-+ Observer pattern
++ [Observer pattern](https://github.com/Reecer9714/DesignPatterns/blob/main/Observer.md#lesson-observer-design-pattern)
 + Singleton pattern
 + Builder pattern
 + Factory pattern
