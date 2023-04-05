@@ -159,3 +159,8 @@ int main() {
 
 ## Conclusion
 The Observer Design Pattern is a powerful tool for decoupling objects and providing a way for objects to be notified of state changes. By using the Observer pattern, we can establish a one-to-many relationship between objects, making it easier to maintain the code and adding new functionality in the future.
+
+## Additional Resources
++ http://codingadventures.org/2021/10/30/observer-pattern-in-modern-c/
++ http://www.vishalchovatiya.com/observer-design-pattern-in-modern-cpp/
++ https://sourcemaking.com/design_patterns/observer
